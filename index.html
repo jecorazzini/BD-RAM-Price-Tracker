@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BD PC Build — RAM Price Tracker</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #4f8ef7;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e8eaf0;
+      --muted: #7b82a0;
+      --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    /* Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    header {
+      max-width: 860px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Alert banner */
+    .alert-banner {
+      max-width: 860px;
+      margin: 0 auto 2rem;
+      background: #1a2a1a;
+      border: 1px solid var(--green);
+      border-radius: 8px;
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+    }
+
+    .alert-banner.warning {
+      background: #2a1f0f;
+      border-color: var(--yellow);
+    }
+
+    .alert-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+
+    .alert-dot.warning { background: var(--yellow); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Cards */
+    .cards {
+      max-width: 860px;
+      margin: 0 auto 2.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.best-value {
+      border-color: var(--green);
+    }
+
+    .card.best-value::before {
+      content: 'LOWEST TODAY';
+      position: absolute;
+      top: 10px;
+      right: -22px;
+      background: var(--green);
+      color: #000;
+      font-size: 9px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      letter-spacing: 0.1em;
+      padding: 3px 32px;
+      transform: rotate(45deg);
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      line-height: 1.3;
+    }
+
+    .card-price {
+      font-family: var(--font-mono);
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-price.high { color: var(--red); }
+    .card-price.medium { color: var(--yellow); }
+    .card-price.good { color: var(--green); }
+
+    .card-target {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .card-delta {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+    }
+
+    /* Log table */
+    .section {
+      max-width: 860px;
+      margin: 0 auto 2rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover { background: var(--surface); }
+    tbody tr:last-child { border-bottom: none; }
+
+    td {
+      padding: 0.65rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    td.date { color: var(--muted); }
+
+    .price-cell { font-weight: 600; }
+    .price-cell.high { color: var(--red); }
+    .price-cell.medium { color: var(--yellow); }
+    .price-cell.good { color: var(--green); }
+    .price-cell.empty { color: var(--border); }
+
+    .buy-tag {
+      display: inline-block;
+      background: #0f2d1a;
+      color: var(--green);
+      border: 1px solid var(--green);
+      border-radius: 4px;
+      font-size: 10px;
+      padding: 1px 6px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+
+    /* Add entry form */
+    .add-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+      gap: 0.75rem;
+      align-items: end;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.55rem 1.25rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    button:hover { opacity: 0.85; }
+
+    .btn-export {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .actions {
+      max-width: 860px;
+      margin: 1rem auto 0;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    footer {
+      max-width: 860px;
+      margin: 3rem auto 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">BD Custom PC Build · 2026</div>
+  <h1>RAM Price Tracker</h1>
+  <p class="subtitle">Monitoring 64GB DDR5 kits · Alert threshold: $500 · Jack Corazzini</p>
+</header>
+
+<div class="alert-banner warning" id="alertBanner">
+  <div class="alert-dot warning"></div>
+  <span id="alertText">Checking latest prices...</span>
+</div>
+
+<!-- Current price cards -->
+<div class="cards" id="cards"></div>
+
+<!-- Log table -->
+<div class="section">
+  <div class="section-title">Price History</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Kingston Fury Beast RGB</th>
+        <th>Crucial Pro</th>
+        <th>G.Skill Flare X5</th>
+        <th>Lowest</th>
+        <th>Buy?</th>
+      </tr>
+    </thead>
+    <tbody id="logBody"></tbody>
+  </table>
+</div>
+
+<!-- Add entry -->
+<div class="section">
+  <div class="section-title">Log a new price check</div>
+  <div class="add-form">
+    <div class="form-grid">
+      <div>
+        <label>Date</label>
+        <input type="date" id="inputDate" />
+      </div>
+      <div>
+        <label>Kingston ($)</label>
+        <input type="number" id="inputKingston" placeholder="e.g. 362" step="0.01" />
+      </div>
+      <div>
+        <label>Crucial Pro ($)</label>
+        <input type="number" id="inputCrucial" placeholder="e.g. 390" step="0.01" />
+      </div>
+      <div>
+        <label>G.Skill ($)</label>
+        <input type="number" id="inputGskill" placeholder="e.g. 520" step="0.01" />
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button onclick="addEntry()">Add Entry</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-export" onclick="exportCSV()">Export CSV</button>
+  <button class="btn-export" onclick="exportJSON()">Export JSON</button>
+</div>
+
+<footer>
+  BD_PC_RAM_Price_Log · Alert threshold $500 · camelcamelcamel.com alerts active for B0CYM3WCXM / CP2K32G56C46U5 / F5-6000J3040G32GX2-FX5
+</footer>
+
+<script>
+  const TARGET = 500;
+
+  // Seed data from our research
+  let entries = JSON.parse(localStorage.getItem('ramPriceLog') || 'null') || [
+    { date: "2026-05-28", kingston: 462.00, crucial: 390.00, gskill: 520.00 },
+    { date: "2026-05-28", kingston: null,   crucial: 850.00, gskill: 1034.00 },
+    { date: "2026-05-28", kingston: 362.00, crucial: null,   gskill: null },
+    { date: "2026-06-30", kingston: 1079.00,crucial: null,   gskill: null },
+    { date: "2026-06-30", kingston: 1079.00,crucial: 654.99, gskill: 522.91 },
+  ];
+
+  function save() {
+    localStorage.setItem('ramPriceLog', JSON.stringify(entries));
+  }
+
+  function priceClass(p) {
+    if (p === null) return 'empty';
+    if (p <= TARGET) return 'good';
+    if (p <= 700) return 'medium';
+    return 'high';
+  }
+
+  function fmt(p) {
+    return p !== null ? `$${p.toFixed(2)}` : '—';
+  }
+
+  function getLatest() {
+    const last = [...entries].reverse();
+    return {
+      kingston: last.find(e => e.kingston !== null)?.kingston ?? null,
+      crucial:  last.find(e => e.crucial  !== null)?.crucial  ?? null,
+      gskill:   last.find(e => e.gskill   !== null)?.gskill   ?? null,
+    };
+  }
+
+  function renderCards() {
+    const latest = getLatest();
+    const kits = [
+      { key: 'kingston', name: 'Kingston Fury Beast RGB', spec: '64GB DDR5-6000 CL30', price: latest.kingston },
+      { key: 'crucial',  name: 'Crucial Pro',             spec: '64GB DDR5-5600 CL46', price: latest.crucial  },
+      { key: 'gskill',   name: 'G.Skill Flare X5',        spec: '64GB DDR5-6000 CL30', price: latest.gskill   },
+    ];
+
+    const validPrices = kits.filter(k => k.price !== null).map(k => k.price);
+    const minPrice = validPrices.length ? Math.min(...validPrices) : null;
+
+    document.getElementById('cards').innerHTML = kits.map(k => {
+      const isBest = k.price !== null && k.price === minPrice;
+      return `
+        <div class="card ${isBest ? 'best-value' : ''}">
+          <div class="card-label">Latest price</div>
+          <div class="card-name">${k.name}<br><span style="font-weight:400;color:var(--muted);font-size:0.78rem">${k.spec}</span></div>
+          <div class="card-price ${priceClass(k.price)}">${fmt(k.price)}</div>
+          <div class="card-target">Target: $${TARGET} or under</div>
+          ${k.price !== null ? `<div class="card-delta">${k.price <= TARGET ? '✓ BUY NOW' : `$${(k.price - TARGET).toFixed(2)} above target`}</div>` : '<div class="card-delta">No data yet</div>'}
+        </div>`;
+    }).join('');
+
+    // Update alert banner
+    const anyGood = validPrices.some(p => p <= TARGET);
+    const banner = document.getElementById('alertBanner');
+    const text = document.getElementById('alertText');
+    if (anyGood) {
+      banner.className = 'alert-banner';
+      banner.querySelector('.alert-dot').className = 'alert-dot';
+      text.textContent = `A kit is at or below $${TARGET} — consider purchasing now.`;
+    } else {
+      banner.className = 'alert-banner warning';
+      banner.querySelector('.alert-dot').className = 'alert-dot warning';
+      const cheapest = minPrice ? `Cheapest today: ${fmt(minPrice)}` : 'No prices logged yet.';
+      text.textContent = `No kit below $${TARGET} yet. ${cheapest} — CamelCamelCamel alerts active.`;
+    }
+  }
+
+  function renderTable() {
+    document.getElementById('logBody').innerHTML = [...entries].reverse().map(e => {
+      const vals = [e.kingston, e.crucial, e.gskill].filter(v => v !== null);
+      const lowest = vals.length ? Math.min(...vals) : null;
+      const buy = lowest !== null && lowest <= TARGET;
+      return `<tr>
+        <td class="date">${e.date}</td>
+        <td class="price-cell ${priceClass(e.kingston)}">${fmt(e.kingston)}</td>
+        <td class="price-cell ${priceClass(e.crucial)}">${fmt(e.crucial)}</td>
+        <td class="price-cell ${priceClass(e.gskill)}">${fmt(e.gskill)}</td>
+        <td class="price-cell ${priceClass(lowest)}">${fmt(lowest)}</td>
+        <td>${buy ? '<span class="buy-tag">BUY</span>' : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function render() {
+    renderCards();
+    renderTable();
+  }
+
+  function addEntry() {
+    const date     = document.getElementById('inputDate').value;
+    const kingston = parseFloat(document.getElementById('inputKingston').value) || null;
+    const crucial  = parseFloat(document.getElementById('inputCrucial').value)  || null;
+    const gskill   = parseFloat(document.getElementById('inputGskill').value)   || null;
+
+    if (!date) { alert('Please enter a date.'); return; }
+    if (!kingston && !crucial && !gskill) { alert('Enter at least one price.'); return; }
+
+    entries.push({ date, kingston, crucial, gskill });
+    save();
+    render();
+
+    document.getElementById('inputKingston').value = '';
+    document.getElementById('inputCrucial').value  = '';
+    document.getElementById('inputGskill').value   = '';
+  }
+
+  function exportCSV() {
+    const rows = [['Date','Kingston Fury Beast RGB','Crucial Pro','G.Skill Flare X5','Lowest']];
+    entries.forEach(e => {
+      const vals = [e.kingston, e.crucial, e.gskill].filter(v => v !== null);
+      const lowest = vals.length ? Math.min(...vals) : '';
+      rows.push([e.date, e.kingston ?? '', e.crucial ?? '', e.gskill ?? '', lowest]);
+    });
+    const csv = rows.map(r => r.join(',')).join('\n');
+    download('BD_PC_RAM_Price_Log.csv', csv, 'text/csv');
+  }
+
+  function exportJSON() {
+    download('BD_PC_RAM_Price_Log.json', JSON.stringify(entries, null, 2), 'application/json');
+  }
+
+  function download(filename, content, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = filename;
+    a.click();
+  }
+
+  // Set today's date as default
+  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+
+  render();
+</script>
+</body>
+</html>
