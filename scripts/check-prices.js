@@ -28,7 +28,7 @@ const PARTS = [
     id: 'ram_kingston',
     category: 'RAM',
     name: 'Kingston Fury Beast RGB 64GB DDR5-6000 CL30',
-    url: 'https://www.newegg.com/kingston-fury-beast-rgb-64gb/p/N82E16820373645', // VERIFY / replace with real URL
+url: 'https://www.newegg.com/kingston-technology-corp-fury-beast-64gb-ddr5-6000-cas-latency-cl30-memory-black/p/N82E16820242865', // Kingston Fury Beast RGB Black CL30
     selector: '.price-current',        // VERIFY against actual page HTML
     target: 500,
   },
@@ -36,7 +36,7 @@ const PARTS = [
     id: 'ram_crucial',
     category: 'RAM',
     name: 'Crucial Pro 64GB DDR5-5600 CL46',
-    url: 'https://www.newegg.com/crucial-pro-64gb/p/EXAMPLE', // VERIFY / replace
+ url: 'https://www.newegg.com/crucial-pro-64gb-ddr5-5600-cas-latency-cl46-desktop-memory-black/p/N82E16820156380', // Crucial Pro CL46
     selector: '.price-current',
     target: 500,
   },
@@ -44,7 +44,7 @@ const PARTS = [
     id: 'ram_gskill',
     category: 'RAM',
     name: 'G.Skill Flare X5 64GB DDR5-6000 CL30',
-    url: 'https://www.newegg.com/g-skill-flare-x5-64gb/p/EXAMPLE', // VERIFY / replace
+url: 'https://www.newegg.com/g-skill-64gb/p/N82E16820374518', // G.Skill Flare X5 CL30
     selector: '.price-current',
     target: 500,
   },
