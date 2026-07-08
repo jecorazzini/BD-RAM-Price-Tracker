@@ -1,16 +1,1 @@
-{
-  "name": "bd-pc-build-price-check",
-  "version": "1.0.0",
-  "description": "Scheduled price checker for BD PC build parts, logging to Google Sheets and alerting via Discord",
-  "main": "check-prices.js",
-  "type": "commonjs",
-  "scripts": {
-    "check": "node check-prices.js"
-  },
-  "dependencies": {
-    "googleapis": "^140.0.0"
-  },
-  "engines": {
-    "node": ">=18"
-  }
-}
+
