@@ -1,7 +1,0 @@
-[
-  { "date": "2026-05-28", "kingston": 462.00, "crucial": 390.00, "gskill": 520.00 },
-  { "date": "2026-05-28", "kingston": null,   "crucial": 850.00, "gskill": 1034.00 },
-  { "date": "2026-05-28", "kingston": 362.00, "crucial": null,   "gskill": null },
-  { "date": "2026-06-30", "kingston": 1079.00,"crucial": null,   "gskill": null },
-  { "date": "2026-06-30", "kingston": 1079.00,"crucial": 654.99, "gskill": 522.91 }
-]

@@ -1,16 +1,21 @@
 name: Price Check
 
+# Runs once a day, not every 6 hours — lower frequency is the single biggest
+# lever for reducing Amazon bot-detection risk. Note: GitHub-hosted runners
+# use shared datacenter IP ranges, which some retailers flag more readily
+# than a residential IP. If bans become a problem, consider moving this to
+# run locally instead (e.g. Windows Task Scheduler) — see README.
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 13 * * *'
   workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   check-prices:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: scripts
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -21,11 +26,23 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: scripts
         run: npm install
 
       - name: Run price check
+        working-directory: scripts
         env:
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: npm run check
+
+      # The script bakes the day's prices into index.html and price-history.json
+      # on disk — commit those back so the live site reflects today's run.
+      - name: Commit updated prices
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html price-history.json
+          git diff --cached --quiet || git commit -m "Update RAM prices ($(date -u +%Y-%m-%d))"
+          git push

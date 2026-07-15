@@ -1,73 +1,82 @@
-# BD PC Build — Price Tracker Automation
+# RAM Price Tracker
 
-This repo now does three things instead of one:
+Tracks the price of 3 specific RAM kits on Amazon, once a day, and shows them
+on `index.html`. That's the whole scope — no other parts, no manual entry.
 
-1. **Automated price checks** (GitHub Actions, runs every 6 hours)
-2. **A shared Google Sheet** tracking the full build (not just RAM) that anyone can open
-3. **Discord alerts** when a part hits its target price
-4. **`index.html`** — a live dashboard that reads from the shared sheet
+## How it works
 
-This replaces the old version, which only stored manual entries in your own
-browser's localStorage (invisible to anyone else, including JD or Alex).
+1. **`.github/workflows/price-check.yml`** runs `scripts/check-prices.js` once
+   a day (and on-demand via the "Run workflow" button in the Actions tab).
+2. **`scripts/check-prices.js`** opens each Amazon product page in a headless,
+   stealth-patched browser (plain `fetch()` doesn't work — Amazon renders the
+   price via JS), reads the price, and:
+   - Bakes the result into `price-history.json` and directly into `index.html`
+     (between the `PRICE_DATA_START`/`PRICE_DATA_END` markers), and commits
+     both back to the repo.
+   - Also logs the row to a Google Sheet, kept purely as an internal record —
+     **the site does not read from the Sheet.** It has no live network
+     dependency at all; the numbers are static HTML by the time you load it.
+   - Fires a Discord alert if any kit is at or below its target price.
+3. **`index.html`** just renders whatever's in `PRICE_DATA`. Open it directly
+   in a browser, or host it anywhere (GitHub Pages, etc.) — it works either way.
 
-## Setup checklist (do this before handing off to JD)
+## Why scraping instead of an official API / feed
 
-### 1. Create the Google Sheet
-- Create a new Google Sheet.
-- Add two tabs named exactly: `PriceLog` and `BuildTotal`.
-- `PriceLog` header row: `Date, Category, Part, Price, Target, Buy`
-- `BuildTotal` can start empty — the script writes to it automatically.
+Amazon prohibits automated scraping in its Terms of Service. This was raised
+internally and cleared before this was built. Keep it at low frequency
+(daily) and don't expand it to more products without re-checking that.
+Amazon's bot detection is also the most aggressive of the retailers we
+looked at, which is why the scraper uses:
+- A headless browser with stealth patches (`puppeteer-extra` +
+  `puppeteer-extra-plugin-stealth`) rather than a raw `fetch()`.
+- A randomized delay between each product check within a run.
+- Once-daily frequency — by far the biggest lever against getting flagged.
+- GitHub-hosted runners (shared datacenter IPs) rather than nothing — if this
+  ever starts getting blocked, moving the run to a residential machine
+  (e.g. Windows Task Scheduler) is the next thing to try.
 
-### 2. Create a Google Service Account (so the script can write to the sheet)
-- Go to [Google Cloud Console](https://console.cloud.google.com/) → create a project.
-- Enable the **Google Sheets API**.
-- Create a **Service Account**, then create a JSON key for it — this downloads a `.json` file.
-- Open that JSON file, copy the whole contents.
-- Share your Google Sheet with the service account's email address (found in the JSON, field `client_email`) — give it **Editor** access.
+If Amazon ever serves a CAPTCHA instead of a price, the script treats that as
+a failed fetch for that item and moves on — it does not try to solve it.
 
-### 3. Publish the sheet as CSV (for the dashboard to read)
-- In Google Sheets: **File → Share → Publish to web**
-- Choose the `PriceLog` tab, format **CSV**, click Publish. Copy the URL.
-- Repeat for the `BuildTotal` tab.
-- Paste both URLs into `index.html`, near the top of the `<script>` block:
-  ```js
-  const PRICE_LOG_CSV_URL = 'PASTE_PRICELOG_CSV_URL_HERE';
-  const BUILD_TOTAL_CSV_URL = 'PASTE_BUILDTOTAL_CSV_URL_HERE';
-  ```
+## Setup
 
-### 4. Create a Discord webhook (for alerts)
-- In your Discord server: channel settings → Integrations → Webhooks → New Webhook.
-- Copy the webhook URL.
-- (No Discord server? Slack has an equivalent "Incoming Webhook" app, or you can skip
-  alerts entirely and just check the dashboard/sheet manually.)
+### 1. Google Sheet (internal log only — not required for the site to work)
+- Create a Sheet with two tabs named exactly `PriceLog` and `BuildTotal`.
+- `PriceLog` header row: `Date, Category, Part, Price, Target, Buy`.
+- Create a Google Service Account (Google Cloud Console → enable the Sheets
+  API → create a Service Account → download its JSON key), and share the
+  Sheet with that account's `client_email` as **Editor**.
 
-### 5. Add secrets to the GitHub repo
-Go to your repo → **Settings → Secrets and variables → Actions → New repository secret**, and add:
+### 2. GitHub repo secrets
+Settings → Secrets and variables → Actions:
 
-| Secret name | Value |
+| Secret | Value |
 |---|---|
-| `SPREADSHEET_ID` | The long ID in your Sheet's URL, e.g. `docs.google.com/spreadsheets/d/THIS_PART/edit` |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | The full contents of the service account JSON key |
-| `DISCORD_WEBHOOK_URL` | Your Discord webhook URL |
+| `SPREADSHEET_ID` | The ID from the Sheet's URL |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Full contents of the service account JSON key |
+| `DISCORD_WEBHOOK_URL` | Optional — alerts are skipped if unset |
 
-### 6. Fix the retailer URLs and selectors
-Open `scripts/check-prices.js` and update the `PARTS` array:
-- Real product URLs for each part (Newegg/B&H tend to scrape more reliably than Amazon)
-- Verify the `selector` / price-matching logic actually finds the price on that
-  specific page — retailer HTML changes, so **test this manually first** by running
-  `node scripts/check-prices.js` locally with your env vars set, before trusting the
-  scheduled run.
-- Add the rest of the build (GPU, CPU, case, etc.) as more entries in `PARTS` — this
-  is what makes `BuildTotal` reflect the *whole* build, not just RAM.
+### 3. Allow the workflow to push
+The Action commits `index.html` and `price-history.json` back to the repo
+after each run. Under **Settings → Actions → General → Workflow permissions**,
+make sure **"Read and write permissions"** is selected — otherwise the commit
+step will fail with a 403.
 
-### 7. Test it
-- Go to the **Actions** tab in GitHub → select "Price Check" → **Run workflow** manually.
-- Check the Sheet updates and (if a part is at/below target) that a Discord message arrives.
-- Once confirmed, the schedule in `.github/workflows/price-check.yml` handles the rest.
+### 4. Test it
+Actions tab → "Price Check" → **Run workflow**. Check that `index.html` and
+`price-history.json` get updated with a new commit, and that a Discord
+message arrives if any kit is at/below target.
 
-## What JD needs to know
-- The shared sheet is the source of truth — not any one person's browser.
-- `index.html` is a read-only live view of that sheet (plus an optional local-only
-  manual entry field for spot checks).
-- If a part's scraping selector breaks (retailer changed their page), the Actions log
-  will show an error for that part — check the **Actions** tab if the dashboard looks stale.
+## Tracked kits & targets
+
+Defined in `PARTS` in `scripts/check-prices.js` (must stay in sync with
+`KITS` in `index.html` — same `key` on both sides):
+
+| Kit | Target |
+|---|---|
+| Kingston Fury Beast RGB 64GB DDR5-5600 CL36 | $850 |
+| Crucial Pro 64GB DDR5-5600 CL46 | $680 |
+| G.Skill Flare X5 64GB DDR5-6000 CL30 | $840 |
+
+Targets were set ~10% below the observed price at the time this was built —
+adjust them in both files as you see fit.

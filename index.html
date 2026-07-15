@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BD PC Build — Price Tracker</title>
+  <title>RAM Price Tracker</title>
   <style>
     :root {
       --bg: #0f1117;
       --surface: #1a1d27;
-      --surface2: #22263a;
       --border: #2e3250;
       --accent: #4f8ef7;
       --green: #22c55e;
@@ -22,6 +21,8 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -30,12 +31,9 @@
       padding: 2rem 1rem;
     }
 
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+    .wrap { max-width: 800px; margin: 0 auto; }
 
-    header {
-      max-width: 900px;
-      margin: 0 auto 2rem;
-    }
+    header { margin-bottom: 1.5rem; }
 
     .eyebrow {
       font-family: var(--font-mono);
@@ -50,260 +48,105 @@
       font-size: clamp(1.4rem, 4vw, 2rem);
       font-weight: 600;
       letter-spacing: -0.02em;
-      line-height: 1.2;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
-    .subtitle {
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-
-    .sync-row {
-      max-width: 900px;
-      margin: 0 auto 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-      font-family: var(--font-mono);
-    }
-
-    .sync-row button {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 6px;
-      padding: 0.4rem 0.9rem;
-      font-family: var(--font-sans);
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
+    .subtitle { color: var(--muted); font-size: 0.875rem; margin-top: 1rem; }
 
     .alert-banner {
-      max-width: 900px;
-      margin: 0 auto 2rem;
-      background: #1a2a1a;
-      border: 1px solid var(--green);
-      border-radius: 8px;
-      padding: 0.875rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.875rem;
+      background: #1a2a1a; border: 1px solid var(--green); border-radius: 8px;
+      padding: 0.875rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.875rem; margin-bottom: 1.5rem;
     }
-
     .alert-banner.warning { background: #2a1f0f; border-color: var(--yellow); }
-    .alert-banner.error { background: #2a1414; border-color: var(--red); }
 
     .alert-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--green); flex-shrink: 0;
-      animation: pulse 2s infinite;
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      flex-shrink: 0; animation: pulse 2s infinite;
     }
     .alert-dot.warning { background: var(--yellow); }
-    .alert-dot.error { background: var(--red); }
-
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-    .build-total {
-      max-width: 900px;
-      margin: 0 auto 2rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .build-total-label {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .build-total-value {
-      font-family: var(--font-mono);
-      font-size: 1.75rem;
-      font-weight: 600;
-    }
-
     .cards {
-      max-width: 900px;
-      margin: 0 auto 2.5rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
     }
 
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem;
-      position: relative;
-      overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.25rem; position: relative; overflow: hidden;
     }
-
     .card.best-value { border-color: var(--green); }
-
     .card.best-value::before {
-      content: 'LOWEST TODAY';
-      position: absolute; top: 10px; right: -22px;
-      background: var(--green); color: #000;
-      font-size: 9px; font-weight: 600;
-      font-family: var(--font-mono); letter-spacing: 0.1em;
-      padding: 3px 32px; transform: rotate(45deg);
+      content: 'LOWEST'; position: absolute; top: 10px; right: -22px;
+      background: var(--green); color: #000; font-size: 9px; font-weight: 600;
+      font-family: var(--font-mono); letter-spacing: 0.1em; padding: 3px 30px;
+      transform: rotate(45deg);
     }
 
-    .card-label {
-      font-size: 11px; font-family: var(--font-mono);
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 0.08em; margin-bottom: 0.5rem;
-    }
-
-    .card-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.3; }
+    .card-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; line-height: 1.3; }
+    .card-spec { font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem; }
     .card-price { font-family: var(--font-mono); font-size: 1.75rem; font-weight: 600; margin-bottom: 0.25rem; }
-    .card-price.high { color: var(--red); }
-    .card-price.medium { color: var(--yellow); }
     .card-price.good { color: var(--green); }
+    .card-price.medium { color: var(--yellow); }
+    .card-price.high { color: var(--red); }
     .card-target { font-size: 0.75rem; color: var(--muted); }
     .card-delta { margin-top: 0.75rem; font-size: 0.75rem; font-family: var(--font-mono); color: var(--muted); }
 
-    .section { max-width: 900px; margin: 0 auto 2rem; }
-
     .section-title {
-      font-size: 0.7rem; font-family: var(--font-mono);
-      text-transform: uppercase; letter-spacing: 0.12em;
-      color: var(--muted); margin-bottom: 1rem;
+      font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--muted); margin-bottom: 1rem;
       padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
       display: flex; justify-content: space-between; align-items: center;
     }
 
     table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-
     thead th {
-      text-align: left; padding: 0.6rem 0.75rem;
-      font-family: var(--font-mono); font-size: 11px;
-      text-transform: uppercase; letter-spacing: 0.08em;
+      text-align: left; padding: 0.6rem 0.75rem; font-family: var(--font-mono);
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
       color: var(--muted); border-bottom: 1px solid var(--border);
     }
-
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-    tbody tr:hover { background: var(--surface); }
+    tbody tr { border-bottom: 1px solid var(--border); }
     tbody tr:last-child { border-bottom: none; }
-
     td { padding: 0.65rem 0.75rem; font-family: var(--font-mono); font-size: 0.8rem; }
     td.date { color: var(--muted); }
 
     .price-cell { font-weight: 600; }
-    .price-cell.high { color: var(--red); }
-    .price-cell.medium { color: var(--yellow); }
     .price-cell.good { color: var(--green); }
+    .price-cell.medium { color: var(--yellow); }
+    .price-cell.high { color: var(--red); }
     .price-cell.empty { color: var(--border); }
 
     .buy-tag {
       display: inline-block; background: #0f2d1a; color: var(--green);
-      border: 1px solid var(--green); border-radius: 4px;
-      font-size: 10px; padding: 1px 6px;
-      font-family: var(--font-mono); letter-spacing: 0.05em;
-    }
-
-    .add-form {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 1.25rem;
-    }
-
-    .add-form-note {
-      font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5;
-    }
-
-    .form-grid {
-      display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
-      gap: 0.75rem; align-items: end;
-    }
-
-    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-
-    label {
-      display: block; font-size: 11px; font-family: var(--font-mono);
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 0.08em; margin-bottom: 0.4rem;
-    }
-
-    input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text); font-family: var(--font-mono);
-      font-size: 0.875rem; padding: 0.55rem 0.75rem; outline: none;
-      transition: border-color 0.15s;
-    }
-    input:focus { border-color: var(--accent); }
-
-    button {
-      background: var(--accent); color: #fff; border: none; border-radius: 6px;
-      font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600;
-      padding: 0.55rem 1.25rem; cursor: pointer; white-space: nowrap;
-      transition: opacity 0.15s;
-    }
-    button:hover { opacity: 0.85; }
-
-    .btn-export { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-weight: 500; }
-
-    .actions {
-      max-width: 900px; margin: 1rem auto 0;
-      display: flex; gap: 0.75rem; justify-content: flex-end;
+      border: 1px solid var(--green); border-radius: 4px; font-size: 10px;
+      padding: 1px 6px; font-family: var(--font-mono); letter-spacing: 0.05em;
     }
 
     footer {
-      max-width: 900px; margin: 3rem auto 0;
-      font-size: 0.75rem; color: var(--muted);
-      font-family: var(--font-mono); padding-top: 1rem;
-      border-top: 1px solid var(--border);
+      margin-top: 2.5rem; font-size: 0.75rem; color: var(--muted);
+      font-family: var(--font-mono); padding-top: 1rem; border-top: 1px solid var(--border);
     }
   </style>
 </head>
 <body>
+<div class="wrap">
 
-<header>
-  <div class="eyebrow">BD Custom PC Build · 2026</div>
-  <h1>Price Tracker</h1>
-  <p class="subtitle">Shared live view of the full build · Owners: Jack Corazzini &amp; JD</p>
-</header>
+  <header>
+    <div class="eyebrow">RAM Price Tracker</div>
+    <h1>3 kits, tracked daily</h1>
+    <p class="subtitle" id="subtitle">Updated once a day by the Amazon price check.</p>
+  </header>
 
-<div class="sync-row">
-  <span id="syncStatus">Loading shared data…</span>
-  <button onclick="loadFromSheet()">Refresh now</button>
-</div>
-
-<div class="alert-banner warning" id="alertBanner">
-  <div class="alert-dot warning"></div>
-  <span id="alertText">Checking latest prices...</span>
-</div>
-
-<div class="build-total">
-  <div>
-    <div class="build-total-label">Full build — latest total</div>
-    <div class="build-total-value" id="buildTotalValue">—</div>
+  <div class="alert-banner warning" id="alertBanner">
+    <div class="alert-dot warning"></div>
+    <span id="alertText">Checking latest prices...</span>
   </div>
-  <div style="font-size:0.75rem;color:var(--muted);max-width:340px;">
-    Pulled live from the shared Google Sheet. Automated price checks run every 6 hours via GitHub Actions.
-  </div>
-</div>
 
-<div class="cards" id="cards"></div>
+  <div class="cards" id="cards"></div>
 
-<div class="section">
   <div class="section-title">
-    <span>Price History (RAM)</span>
+    <span>Price History</span>
     <span id="lastUpdated" style="text-transform:none;letter-spacing:0;"></span>
   </div>
   <table>
@@ -313,269 +156,124 @@
         <th>Kingston Fury Beast RGB</th>
         <th>Crucial Pro</th>
         <th>G.Skill Flare X5</th>
-        <th>Lowest</th>
         <th>Buy?</th>
       </tr>
     </thead>
     <tbody id="logBody"></tbody>
   </table>
-</div>
 
-<div class="section">
-  <div class="section-title">Log a manual price check</div>
-  <div class="add-form">
-    <p class="add-form-note">
-      This adds a LOCAL entry only visible in your browser — it does not write to the shared
-      sheet. Use this for spot-checks between automated runs; the automation is the source of truth
-      that JD and Alex will see.
-    </p>
-    <div class="form-grid">
-      <div><label>Date</label><input type="date" id="inputDate" /></div>
-      <div><label>Kingston ($)</label><input type="number" id="inputKingston" placeholder="e.g. 362" step="0.01" /></div>
-      <div><label>Crucial Pro ($)</label><input type="number" id="inputCrucial" placeholder="e.g. 390" step="0.01" /></div>
-      <div><label>G.Skill ($)</label><input type="number" id="inputGskill" placeholder="e.g. 520" step="0.01" /></div>
-      <div><label>&nbsp;</label><button onclick="addEntry()">Add Entry</button></div>
-    </div>
-  </div>
-</div>
+  <footer>
+    Prices are baked into this page by a GitHub Action that scrapes Amazon once a day — no live network fetch, works offline.
+  </footer>
 
-<div class="actions">
-  <button class="btn-export" onclick="exportCSV()">Export CSV</button>
-  <button class="btn-export" onclick="exportJSON()">Export JSON</button>
 </div>
-
-<footer>
-  BD_PC_Price_Log · RAM alert threshold $500 · Automated checks + shared sheet via GitHub Actions ·
-  <span id="sheetLinkFooter"></span>
-</footer>
 
 <script>
-  const TARGET = 500;
+  // Each kit tracks its own "buy" threshold — set as a starting point from
+  // current market prices (~10% below observed price as of 2026-07-15).
+  // Adjust freely as prices move.
+  const KITS = [
+    { key: 'kingston', name: 'Kingston Fury Beast RGB', spec: '64GB DDR5-5600 CL36', target: 850 },
+    { key: 'crucial', name: 'Crucial Pro', spec: '64GB DDR5-5600 CL46', target: 680 },
+    { key: 'gskill', name: 'G.Skill Flare X5', spec: '64GB DDR5-6000 CL30', target: 840 },
+  ];
 
   // ---------------------------------------------------------------------
-  // CONFIGURE THIS: paste your published Google Sheet's CSV export links.
-  // In Google Sheets: File > Share > Publish to web > choose each tab >
-  // CSV format. Paste the resulting URLs below.
+  // Price data is baked directly into this file by scripts/check-prices.js
+  // after each scrape (see the PRICE_DATA_START/END markers below) — no
+  // fetch, no external sheet, works whether this file is opened directly
+  // or served. Do not hand-edit between the markers; it gets overwritten.
   // ---------------------------------------------------------------------
-  const PRICE_LOG_CSV_URL = ''; // e.g. 'https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv'
-  const BUILD_TOTAL_CSV_URL = ''; // the "BuildTotal" tab published as CSV
-
-  let entries = JSON.parse(localStorage.getItem('ramPriceLog') || 'null') || [];
-  let sheetRows = [];       // parsed rows from PriceLog tab
-  let buildTotalRows = [];  // parsed rows from BuildTotal tab
-
-  function priceClass(p) {
-    if (p === null || p === undefined || isNaN(p)) return 'empty';
-    if (p <= TARGET) return 'good';
-    if (p <= 700) return 'medium';
-    return 'high';
+  /* PRICE_DATA_START */
+  const PRICE_DATA = [
+  {
+    "date": "2026-07-15",
+    "kingston": 929.7,
+    "crucial": 756,
+    "gskill": 919.99
   }
+];
+  /* PRICE_DATA_END */
 
   function fmt(p) {
     return (p !== null && p !== undefined && !isNaN(p)) ? `$${Number(p).toFixed(2)}` : '—';
   }
 
-  function parseCSV(text) {
-    return text.trim().split('\n').map(line =>
-      line.split(',').map(cell => cell.replace(/^"|"$/g, '').trim())
-    );
+  function priceClass(price, target) {
+    if (price === null || price === undefined || isNaN(price)) return 'empty';
+    if (price <= target) return 'good';
+    if (price <= target * 1.1) return 'medium';
+    return 'high';
   }
 
-  async function loadFromSheet() {
-    const statusEl = document.getElementById('syncStatus');
-
-    if (!PRICE_LOG_CSV_URL || !BUILD_TOTAL_CSV_URL) {
-      statusEl.textContent = 'Shared sheet not connected yet — showing local data only. (Set CSV URLs in index.html.)';
-      renderAll();
-      return;
-    }
-
-    statusEl.textContent = 'Syncing with shared sheet…';
-    try {
-      const [priceLogRes, buildTotalRes] = await Promise.all([
-        fetch(PRICE_LOG_CSV_URL + '&t=' + Date.now()),
-        fetch(BUILD_TOTAL_CSV_URL + '&t=' + Date.now()),
-      ]);
-      const [priceLogCsv, buildTotalCsv] = await Promise.all([priceLogRes.text(), buildTotalRes.text()]);
-
-      sheetRows = parseCSV(priceLogCsv).slice(1); // drop header
-      buildTotalRows = parseCSV(buildTotalCsv).slice(1);
-
-      statusEl.textContent = `Synced with shared sheet at ${new Date().toLocaleTimeString()}`;
-      renderAll();
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = 'Could not reach shared sheet — showing local data only.';
-      renderAll();
-    }
-  }
-
-  function getLatestRamFromSheet() {
-    // sheetRows format: [date, category, part_name, price, target, buy_flag]
-    const ram = sheetRows.filter(r => r[1] === 'RAM');
-    const findLatest = (nameMatch) => {
-      const rows = ram.filter(r => r[2] && r[2].toLowerCase().includes(nameMatch));
-      const last = rows[rows.length - 1];
-      return last && last[3] ? parseFloat(last[3]) : null;
-    };
-    return {
-      kingston: findLatest('kingston'),
-      crucial: findLatest('crucial'),
-      gskill: findLatest('g.skill') || findLatest('gskill'),
-    };
+  function latestPrices() {
+    const last = PRICE_DATA[PRICE_DATA.length - 1];
+    return last || {};
   }
 
   function renderCards() {
-    const fromSheet = getLatestRamFromSheet();
-    const fromLocal = getLatestLocal();
-    // Prefer shared sheet data; fall back to local manual entries if sheet is empty.
-    const latest = {
-      kingston: fromSheet.kingston ?? fromLocal.kingston,
-      crucial: fromSheet.crucial ?? fromLocal.crucial,
-      gskill: fromSheet.gskill ?? fromLocal.gskill,
-    };
-
-    const kits = [
-      { key: 'kingston', name: 'Kingston Fury Beast RGB', spec: '64GB DDR5-6000 CL30', price: latest.kingston },
-      { key: 'crucial', name: 'Crucial Pro', spec: '64GB DDR5-5600 CL46', price: latest.crucial },
-      { key: 'gskill', name: 'G.Skill Flare X5', spec: '64GB DDR5-6000 CL30', price: latest.gskill },
-    ];
-
-    const validPrices = kits.filter(k => k.price !== null && k.price !== undefined).map(k => k.price);
+    const latest = latestPrices();
+    const validPrices = KITS.map(k => latest[k.key]).filter(p => p !== undefined && p !== null);
     const minPrice = validPrices.length ? Math.min(...validPrices) : null;
 
-    document.getElementById('cards').innerHTML = kits.map(k => {
-      const isBest = k.price !== null && k.price !== undefined && k.price === minPrice;
+    document.getElementById('cards').innerHTML = KITS.map(k => {
+      const price = latest[k.key];
+      const isBest = price !== undefined && price === minPrice;
+      const cls = priceClass(price, k.target);
       return `
         <div class="card ${isBest ? 'best-value' : ''}">
-          <div class="card-label">Latest price</div>
-          <div class="card-name">${k.name}<br><span style="font-weight:400;color:var(--muted);font-size:0.78rem">${k.spec}</span></div>
-          <div class="card-price ${priceClass(k.price)}">${fmt(k.price)}</div>
-          <div class="card-target">Target: $${TARGET} or under</div>
-          ${k.price !== null && k.price !== undefined ? `<div class="card-delta">${k.price <= TARGET ? '✓ BUY NOW' : `$${(k.price - TARGET).toFixed(2)} above target`}</div>` : '<div class="card-delta">No data yet</div>'}
+          <div class="card-name">${k.name}</div>
+          <div class="card-spec">${k.spec}</div>
+          <div class="card-price ${cls}">${fmt(price)}</div>
+          <div class="card-target">Buy target: $${k.target} or under</div>
+          ${price !== undefined && price !== null
+            ? `<div class="card-delta">${price <= k.target ? '✓ BUY NOW' : `$${(price - k.target).toFixed(2)} above target`}</div>`
+            : '<div class="card-delta">No data yet</div>'}
         </div>`;
     }).join('');
 
-    const anyGood = validPrices.some(p => p <= TARGET);
+    const hits = KITS.filter(k => latest[k.key] !== undefined && latest[k.key] <= k.target);
     const banner = document.getElementById('alertBanner');
     const text = document.getElementById('alertText');
-    if (anyGood) {
+    if (hits.length) {
       banner.className = 'alert-banner';
       banner.querySelector('.alert-dot').className = 'alert-dot';
-      text.textContent = `A kit is at or below $${TARGET} — consider purchasing now.`;
+      text.textContent = `${hits.map(k => k.name).join(', ')} at or below target — consider buying now.`;
     } else {
       banner.className = 'alert-banner warning';
       banner.querySelector('.alert-dot').className = 'alert-dot warning';
-      const cheapest = minPrice !== null ? `Cheapest today: ${fmt(minPrice)}` : 'No prices logged yet.';
-      text.textContent = `No kit below $${TARGET} yet. ${cheapest}`;
+      text.textContent = minPrice !== null
+        ? `No kit at target yet. Cheapest today: ${fmt(minPrice)}.`
+        : 'No prices logged yet.';
     }
   }
 
-  function renderBuildTotal() {
-    const totalRow = buildTotalRows.find(r => r[1] === 'TOTAL');
-    const el = document.getElementById('buildTotalValue');
-    el.textContent = totalRow && totalRow[2] ? `$${parseFloat(totalRow[2]).toFixed(2)}` : '—';
-  }
-
-  function getLatestLocal() {
-    const last = [...entries].reverse();
-    return {
-      kingston: last.find(e => e.kingston !== null)?.kingston ?? null,
-      crucial: last.find(e => e.crucial !== null)?.crucial ?? null,
-      gskill: last.find(e => e.gskill !== null)?.gskill ?? null,
-    };
-  }
-
   function renderTable() {
-    // Combine sheet rows (RAM only, reshaped) with local manual entries for display.
-    const sheetEntries = {};
-    sheetRows.filter(r => r[1] === 'RAM').forEach(r => {
-      const date = r[0];
-      if (!sheetEntries[date]) sheetEntries[date] = { date, kingston: null, crucial: null, gskill: null };
-      const price = r[3] ? parseFloat(r[3]) : null;
-      const name = (r[2] || '').toLowerCase();
-      if (name.includes('kingston')) sheetEntries[date].kingston = price;
-      else if (name.includes('crucial')) sheetEntries[date].crucial = price;
-      else if (name.includes('g.skill') || name.includes('gskill')) sheetEntries[date].gskill = price;
-    });
+    const rows = [...PRICE_DATA].sort((a, b) => a.date.localeCompare(b.date)).reverse();
 
-    const combined = [...Object.values(sheetEntries), ...entries];
-    combined.sort((a, b) => a.date.localeCompare(b.date));
-
-    document.getElementById('logBody').innerHTML = [...combined].reverse().map(e => {
-      const vals = [e.kingston, e.crucial, e.gskill].filter(v => v !== null && v !== undefined);
-      const lowest = vals.length ? Math.min(...vals) : null;
-      const buy = lowest !== null && lowest <= TARGET;
+    document.getElementById('logBody').innerHTML = rows.map(r => {
+      const hits = KITS.filter(k => r[k.key] !== undefined && r[k.key] !== null && r[k.key] <= k.target);
       return `<tr>
-        <td class="date">${e.date}</td>
-        <td class="price-cell ${priceClass(e.kingston)}">${fmt(e.kingston)}</td>
-        <td class="price-cell ${priceClass(e.crucial)}">${fmt(e.crucial)}</td>
-        <td class="price-cell ${priceClass(e.gskill)}">${fmt(e.gskill)}</td>
-        <td class="price-cell ${priceClass(lowest)}">${fmt(lowest)}</td>
-        <td>${buy ? '<span class="buy-tag">BUY</span>' : '—'}</td>
+        <td class="date">${r.date}</td>
+        ${KITS.map(k => `<td class="price-cell ${priceClass(r[k.key], k.target)}">${fmt(r[k.key])}</td>`).join('')}
+        <td>${hits.length ? '<span class="buy-tag">BUY</span>' : '—'}</td>
       </tr>`;
     }).join('');
 
     document.getElementById('lastUpdated').textContent =
-      combined.length ? `Last entry: ${combined[combined.length - 1].date}` : '';
+      rows.length ? `Last entry: ${rows[0].date}` : '';
+
+    document.getElementById('subtitle').textContent = rows.length
+      ? `Last checked ${rows[0].date} by the Amazon price check.`
+      : 'No prices logged yet — the daily Amazon price check will populate this.';
   }
 
   function renderAll() {
     renderCards();
-    renderBuildTotal();
     renderTable();
   }
 
-  function saveLocal() {
-    localStorage.setItem('ramPriceLog', JSON.stringify(entries));
-  }
-
-  function addEntry() {
-    const date = document.getElementById('inputDate').value;
-    const kingston = parseFloat(document.getElementById('inputKingston').value) || null;
-    const crucial = parseFloat(document.getElementById('inputCrucial').value) || null;
-    const gskill = parseFloat(document.getElementById('inputGskill').value) || null;
-
-    if (!date) { alert('Please enter a date.'); return; }
-    if (!kingston && !crucial && !gskill) { alert('Enter at least one price.'); return; }
-
-    entries.push({ date, kingston, crucial, gskill });
-    saveLocal();
-    renderAll();
-
-    document.getElementById('inputKingston').value = '';
-    document.getElementById('inputCrucial').value = '';
-    document.getElementById('inputGskill').value = '';
-  }
-
-  function exportCSV() {
-    const rows = [['Date', 'Kingston Fury Beast RGB', 'Crucial Pro', 'G.Skill Flare X5', 'Lowest']];
-    entries.forEach(e => {
-      const vals = [e.kingston, e.crucial, e.gskill].filter(v => v !== null);
-      const lowest = vals.length ? Math.min(...vals) : '';
-      rows.push([e.date, e.kingston ?? '', e.crucial ?? '', e.gskill ?? '', lowest]);
-    });
-    const csv = rows.map(r => r.join(',')).join('\n');
-    download('BD_PC_RAM_Price_Log_local.csv', csv, 'text/csv');
-  }
-
-  function exportJSON() {
-    download('BD_PC_RAM_Price_Log_local.json', JSON.stringify(entries, null, 2), 'application/json');
-  }
-
-  function download(filename, content, type) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([content], { type }));
-    a.download = filename;
-    a.click();
-  }
-
-  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('sheetLinkFooter').textContent = PRICE_LOG_CSV_URL
-    ? 'Shared sheet connected.'
-    : 'Shared sheet not yet connected — see README.';
-
-  loadFromSheet();
+  renderAll();
 </script>
 </body>
 </html>
