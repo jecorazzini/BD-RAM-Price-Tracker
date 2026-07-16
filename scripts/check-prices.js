@@ -231,7 +231,10 @@ async function main() {
 
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--disable-blink-features=AutomationControlled'],
+    // --no-sandbox is required on GitHub-hosted runners (no privileged user
+    // namespaces available for Chrome's sandbox). Fine here since the runner
+    // is an ephemeral, single-purpose CI container, not a shared machine.
+    args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
   });
 
   try {
