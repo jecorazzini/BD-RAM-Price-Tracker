@@ -123,6 +123,35 @@
       padding: 1px 6px; font-family: var(--font-mono); letter-spacing: 0.05em;
     }
 
+    .add-form {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.25rem; margin-top: 2rem;
+    }
+    .add-form-note { font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 0.75rem; align-items: end;
+    }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+
+    label {
+      display: block; font-size: 11px; font-family: var(--font-mono);
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 0.4rem;
+    }
+    input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-family: var(--font-mono);
+      font-size: 0.875rem; padding: 0.55rem 0.75rem; outline: none;
+    }
+    input:focus { border-color: var(--accent); }
+    button {
+      background: var(--accent); color: #fff; border: none; border-radius: 6px;
+      font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600;
+      padding: 0.55rem 1.25rem; cursor: pointer; white-space: nowrap;
+    }
+    button:hover { opacity: 0.85; }
+
     footer {
       margin-top: 2.5rem; font-size: 0.75rem; color: var(--muted);
       font-family: var(--font-mono); padding-top: 1rem; border-top: 1px solid var(--border);
@@ -162,6 +191,21 @@
     <tbody id="logBody"></tbody>
   </table>
 
+  <div class="add-form">
+    <p class="add-form-note">
+      Add a price by hand — useful when the automated check misses a day, or for a quick
+      spot-check. Saved only in this browser (not synced to GitHub or other devices); leave
+      a field blank to skip that kit.
+    </p>
+    <div class="form-grid">
+      <div><label>Date</label><input type="date" id="inputDate" /></div>
+      <div><label>Kingston ($)</label><input type="number" id="inputKingston" placeholder="e.g. 850" step="0.01" /></div>
+      <div><label>Crucial Pro ($)</label><input type="number" id="inputCrucial" placeholder="e.g. 680" step="0.01" /></div>
+      <div><label>G.Skill ($)</label><input type="number" id="inputGskill" placeholder="e.g. 840" step="0.01" /></div>
+      <div><button onclick="addEntry()">Add</button></div>
+    </div>
+  </div>
+
   <footer>
     Prices are baked into this page by a GitHub Action that scrapes Amazon once a day — no live network fetch, works offline.
   </footer>
@@ -195,6 +239,24 @@
 ];
   /* PRICE_DATA_END */
 
+  let manualEntries = JSON.parse(localStorage.getItem('ramManualEntries') || '[]');
+
+  // Merges baked PRICE_DATA with manually-added local entries, keyed by date.
+  // A manual entry's price for a kit wins over the baked one for that same
+  // date/kit whenever a value is provided — it's an intentional correction.
+  function combinedData() {
+    const byDate = {};
+    for (const r of PRICE_DATA) byDate[r.date] = { ...r };
+    for (const r of manualEntries) {
+      if (!byDate[r.date]) byDate[r.date] = { date: r.date };
+      for (const k of KITS) {
+        const v = r[k.key];
+        if (v !== null && v !== undefined && !isNaN(v)) byDate[r.date][k.key] = v;
+      }
+    }
+    return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
   function fmt(p) {
     return (p !== null && p !== undefined && !isNaN(p)) ? `$${Number(p).toFixed(2)}` : '—';
   }
@@ -206,9 +268,22 @@
     return 'high';
   }
 
+  // Most recent NON-NULL price per kit, not just whatever's in the last row —
+  // a single failed scrape (null for that day) shouldn't blank out a kit that
+  // has perfectly good prior data.
   function latestPrices() {
-    const last = PRICE_DATA[PRICE_DATA.length - 1];
-    return last || {};
+    const data = combinedData();
+    const latest = {};
+    for (const k of KITS) {
+      for (let i = data.length - 1; i >= 0; i--) {
+        const v = data[i][k.key];
+        if (v !== null && v !== undefined && !isNaN(v)) {
+          latest[k.key] = v;
+          break;
+        }
+      }
+    }
+    return latest;
   }
 
   function renderCards() {
@@ -218,7 +293,7 @@
 
     document.getElementById('cards').innerHTML = KITS.map(k => {
       const price = latest[k.key];
-      const isBest = price !== undefined && price === minPrice;
+      const isBest = price !== undefined && price !== null && price === minPrice;
       const cls = priceClass(price, k.target);
       return `
         <div class="card ${isBest ? 'best-value' : ''}">
@@ -249,7 +324,7 @@
   }
 
   function renderTable() {
-    const rows = [...PRICE_DATA].sort((a, b) => a.date.localeCompare(b.date)).reverse();
+    const rows = combinedData().reverse();
 
     document.getElementById('logBody').innerHTML = rows.map(r => {
       const hits = KITS.filter(k => r[k.key] !== undefined && r[k.key] !== null && r[k.key] <= k.target);
@@ -273,6 +348,28 @@
     renderTable();
   }
 
+  function addEntry() {
+    const date = document.getElementById('inputDate').value;
+    if (!date) { alert('Please enter a date.'); return; }
+
+    const entry = { date };
+    for (const k of KITS) {
+      const raw = document.getElementById('input' + k.key.charAt(0).toUpperCase() + k.key.slice(1)).value;
+      const v = parseFloat(raw);
+      if (!isNaN(v)) entry[k.key] = v;
+    }
+    if (KITS.every(k => entry[k.key] === undefined)) { alert('Enter at least one price.'); return; }
+
+    manualEntries.push(entry);
+    localStorage.setItem('ramManualEntries', JSON.stringify(manualEntries));
+    renderAll();
+
+    document.getElementById('inputKingston').value = '';
+    document.getElementById('inputCrucial').value = '';
+    document.getElementById('inputGskill').value = '';
+  }
+
+  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
   renderAll();
 </script>
 </body>
