@@ -72,11 +72,15 @@ const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 
 // Amazon's price markup varies by product/page type — try each until one hits.
+// All scoped inside #ppd (the main product-details block) deliberately — an
+// unscoped '.a-price .a-offscreen' can match an unrelated price elsewhere on
+// the page (list price, a related-item carousel, etc.), and a wrong price is
+// worse than no price for something people make buying decisions off of.
 const PRICE_SELECTORS = [
   '#corePrice_feature_div .a-price .a-offscreen',
   '#corePriceDisplay_desktop_feature_div .a-price .a-offscreen',
   '#apex_desktop .a-price .a-offscreen',
-  '.a-price .a-offscreen',
+  '#ppd .a-price .a-offscreen',
 ];
 
 function sleep(ms) {
@@ -180,12 +184,18 @@ function updateSiteData(today, latestPrices) {
     history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8'));
   }
 
-  const todayEntry = { date: today };
+  // With multiple runs a day, a later failed fetch (null) must not overwrite
+  // an earlier successful one for the same day — keep whichever is non-null.
+  const existingIndex = history.findIndex((h) => h.date === today);
+  const todayEntry = existingIndex >= 0 ? { ...history[existingIndex] } : { date: today };
   for (const p of latestPrices) {
-    todayEntry[p.key] = p.price;
+    if (p.price !== null && p.price !== undefined) {
+      todayEntry[p.key] = p.price;
+    } else if (todayEntry[p.key] === undefined) {
+      todayEntry[p.key] = null;
+    }
   }
 
-  const existingIndex = history.findIndex((h) => h.date === today);
   if (existingIndex >= 0) {
     history[existingIndex] = todayEntry;
   } else {

@@ -1,18 +1,19 @@
 name: Price Check
 
-# Runs once a day, not every 6 hours — lower frequency is the single biggest
-# lever for reducing Amazon bot-detection risk. Note: GitHub-hosted runners
-# use shared datacenter IP ranges, which some retailers flag more readily
-# than a residential IP. If bans become a problem, consider moving this to
-# run locally instead (e.g. Windows Task Scheduler) — see README.
+# Runs 3x/day, 8 hours apart (10:00 UTC / 6am EDT, plus +8h and +16h).
+# Note this is a step back up from the once-daily schedule this was
+# deliberately dropped to earlier, specifically to reduce Amazon
+# bot-detection risk — GitHub-hosted runners use shared datacenter IPs,
+# which get flagged more readily than a residential IP, and this repo has
+# already hit Amazon's soft bot-check at least once. If blocks become
+# frequent, drop back to once a day, or move this to run locally instead
+# (e.g. Windows Task Scheduler) — see README.
 #
-# Target: 6:00 AM Eastern. GitHub Actions cron is always UTC and does NOT
-# shift for daylight saving, so this is pinned to EDT (UTC-4), currently in
-# effect. Once EST (UTC-5) kicks in (~Nov), this will run at 5:00 AM Eastern
-# instead of 6:00 — bump to '0 11 * * *' then if that hour matters to you.
+# GitHub Actions cron is always UTC and does NOT shift for daylight saving,
+# so 10:00 UTC is 6am EDT now but will become 5am once EST kicks in (~Nov).
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 10,18,2 * * *'
   workflow_dispatch: {}
 
 permissions:
