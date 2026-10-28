@@ -628,5 +628,11 @@
     "kingston": 1420.9,
     "crucial": 1159.79,
     "gskill": 1279.99
+  },
+  {
+    "date": "2026-10-28",
+    "kingston": null,
+    "crucial": null,
+    "gskill": null
   }
 ]
